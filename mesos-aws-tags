@@ -1,0 +1,28 @@
+#!/bin/bash
+
+ATTRIBUTES_DIR="/etc/mesos-slave/attributes"
+
+# Fetch tags
+INSTANCE_ID=$(ec2-metadata -i | cut -d ' ' -f2)
+TAGS=$(ec2-describe-tags \
+  --region "us-west-2" \
+  --filter "resource-type=instance" \
+  --filter "resource-id=${INSTANCE_ID}" \
+  | cut -f4-5)
+TAGS=(${TAGS})  # Use an array
+
+IDX=0
+SIZE=${#TAGS[*]}
+
+# Generate files in ${ATTRIBUTES_DIR}
+mkdir -p ${ATTRIBUTES_DIR}
+while [ "${IDX}" -lt "${SIZE}" ]
+do
+  KEY=${TAGS[$IDX]}
+  VALUE=${TAGS[$(($IDX+1))]}
+  CLEAN_KEY=$(echo ${KEY} | sed -e 's/[/><|:&:+ ]/_/g')
+  echo "Settings ${CLEAN_KEY} to ${VALUE}"
+  echo ${VALUE} > ${ATTRIBUTES_DIR}/${CLEAN_KEY}
+
+  let "IDX=$IDX+2"
+done
