@@ -4,8 +4,9 @@ ATTRIBUTES_DIR="/etc/mesos-slave/attributes"
 
 # Fetch tags
 INSTANCE_ID=$(ec2-metadata -i | cut -d ' ' -f2)
+MY_REGION=$(ec2-metadata --availability-zone | sed 's/.$//' | awk '{print $2}')
 TAGS=$(ec2-describe-tags \
-  --region "us-west-2" \
+  --region $MY_REGION \
   --filter "resource-type=instance" \
   --filter "resource-id=${INSTANCE_ID}" \
   | cut -f4-5)
